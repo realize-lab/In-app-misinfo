@@ -1,0 +1,8 @@
+
+.medicalText {
+    background-color: #EFEFEF;
+    width: 90%;
+    padding: 20px;
+    flex-direction: row;
+    display: flex;
+  }

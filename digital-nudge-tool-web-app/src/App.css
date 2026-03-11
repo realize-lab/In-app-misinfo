@@ -1,0 +1,298 @@
+.App {
+  text-align: center;
+  background-color: #FFFF;
+  align-content: center;
+}
+
+.Main {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-top: 50px;
+}
+
+.main-box {
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+  width: 80%;
+  justify-self: center;
+  align-content: center;
+  border-radius: 16px;
+}
+
+.title {
+  padding: 20px;
+  font-size: 40px;
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
+  color: #424242;
+}
+
+/* IN-BETWEEN PAGE STYLING */
+
+.page-subtitle {
+  padding: 20px;
+}
+
+.page-body-text {
+  font-size: 20px;
+  padding: 5px;
+  text-align: left;
+}
+
+.page-box {
+  width: 80%;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+  margin: auto;
+  border-radius: 16px;
+  background-color:#00A67E80;
+}
+
+.page-text-box {
+  width: 90%;
+  margin: auto;
+  padding: 30px 0px 30px 0px;
+}
+
+.mini-box {
+  min-height: 400px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+/* QUESTION PAGE STYLING */
+
+.scenario-box {
+  display: flex;
+  flex-direction: column;
+  box-shadow: rgba(33, 35, 38, 0.1) 0px 10px 10px -10px;
+  min-height: 50px;
+  justify-content: center;
+
+}
+
+.scenario-text {
+  font-size: 20px;
+}
+
+.gptBox {
+  width: 100%;
+  align-self: right;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  margin-top: 20px;
+  box-shadow: #424242;
+}
+
+.gpt-image{
+  height: 100%;
+  object-fit: contain;
+  object-position: top;
+  padding: 10px 20px 20px 10px;
+}
+
+.text-box{
+  display: flex;
+  width: 100%;
+  justify-content: right;
+}
+
+/* Prompts */
+.prompt-box {
+  display: flex;
+  flex-direction: row;
+  /* width: 90%; */
+  padding: 20px;
+  justify-content: right;
+}
+
+.gpt-text {
+  text-align: left;
+  color: #424242;
+  line-height: 30px;
+  font-weight: normal;
+  max-width: 70%;
+  align-self: center;
+  font-size: 22px;
+}
+
+.answer-box {
+  width: 100%;
+  /* border-top-color: #424242;
+  border-top-width: 1px;
+  border-style: solid;
+  border-bottom-width: 0;
+  border-left-width: 0;
+  border-right-width: 0; */
+  background-color: #EFEFEF;
+}
+
+.medical-text-box {
+  background-color: #EFEFEF;
+  padding: 40px;
+  /* margin-left: 10%; */
+  flex-direction: row;
+  display: flex;
+  text-align: left;
+}
+
+.text-chunk {
+  padding: 10px;
+}
+
+.question-card {
+  /* Center the div  */
+  margin: 0 auto;
+  margin-top: 50px;
+
+  /* Dimensions  */
+  width: 80%; /* Can be in percentage also. */
+  height: auto;
+
+  /* Visual  */
+  background-color: white;
+  padding: 16px;
+  border-radius: 16px;
+  color: white;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+  /* position: relative; */
+  z-index: 10;
+}
+
+ul {
+  list-style: none;
+}
+
+li {
+  margin: 8px auto auto auto;
+  background-color: #00A67E;
+  padding: 16px;
+  border: 3px solid white;
+  border-radius: 20px;
+  font-size: 20px;
+  /* color: #424242; */
+  color: white;
+  width: 60%;
+  opacity: 0.8;
+}
+
+li:hover {
+  opacity: 1.0;
+  cursor: pointer;
+}
+
+.question-text {
+  color: #424242;
+  font-size: 20px;
+}
+
+/* Final Results  */
+
+.final-results {
+  /* Center the div  */
+  margin: 0 auto;
+
+  /* Dimensions  */
+  width: 90%; /* Can be in percentage also. */
+  height: auto;
+  margin-top: 64px;
+
+  /* Visual  */
+  background-color: lightgray;
+  padding: 16px;
+  border-radius: 16px;
+  color: #424242;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px,
+    rgba(0, 0, 0, 0.3) 0px 18px 36px -18px;
+}
+
+.question-card ul .selected-answer {
+  background: #146e59;
+  border-color: #09362b;
+  opacity: 0.8;
+}
+
+/* DISCLAIMER STYLING */
+
+/* .disclaimer-box {
+  background-color: lightgray;
+} */
+
+.disclaimer-text {
+  color: black;
+  padding: 10px;
+  font-size: large;
+  /* text-align: left; */
+}
+
+.button-box {
+  display: flex;
+  width: 90%;
+  justify-content: right;
+  flex-direction: row;
+}
+.button-box2 {
+  display: flex;
+  width: 90%;
+  justify-content: left;
+  flex-direction: row;
+}
+
+.next-button {
+  margin-right: 10%;
+  background-color: #212121;
+  padding: 16px;
+  /* border: 3px solid white; */
+  border-radius: 20px;
+  font-size: 20px;
+  /* color: #424242; */
+  color: white;
+  width: 15%;
+  opacity: 0.8;
+}
+.instruction-button {
+  margin-right: 35%;
+  background-color: #212121;
+  padding: 16px;
+  /* border: 3px solid white; */
+  border-radius: 20px;
+  font-size: 20px;
+  /* color: #424242; */
+  color: white;
+  width: 15%;
+  opacity: 0.8;
+}
+
+.restart-button {
+  /* background-color: red; */
+  border: none;
+  color: black;
+  padding: 16px 24px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  font-weight: bold;
+
+  border-radius: 16px;
+  opacity: 0.8;
+  margin: 20px;
+}
+
+.accept-button {
+  background-color: #00A67E;
+}
+
+.reject-button {
+  background-color: #FF6961;
+}
+
+button:hover {
+  opacity: 1.0;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.8;
+  cursor:auto;
+}
