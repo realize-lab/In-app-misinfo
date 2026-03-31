@@ -62,6 +62,7 @@ check_model_convergence <- function(model) {
     return(TRUE)
 }
 
+
 # CSV columns present in the data
 column <- list('Intervention_ID', "Tag", 'Misinfo', "Misinfo_Answer", 'Trust',  "Child", "BreastCancer" , 'Correct' , "Correct+Unsure", "Adherence" , "Adherence+Unsure ", "Unsure", 'Participant_ID')
 
@@ -1249,3 +1250,199 @@ save_table(results_table_strict_true_familiarity_adherence, "strict_familiarity_
 ##### combine results saving
 save_table(results_table_strict_true_familiarity, "strict_familiarity_no_misinfo_interventions")
 save_df(strict_true_familiarity_df, "strict_familiarity_no_misinfo_interventions")
+
+## Result 10: Per-topic Intervention Impact
+options(max.print = 100000)
+tags <- unique(as.character(data$Tag))
+all_tag_results <- list()
+
+get_results_table_glm <- function(model_summary, observed, fixed) {
+  coefs <- model_summary$coefficients
+  if (is.null(coefs) || nrow(coefs) < 2) return(NULL)
+  
+  results <- exp(cbind(
+    OR = coefs[, 1],
+    LB = coefs[, 1] - coefs[, 2] * qnorm(0.975),
+    UB = coefs[, 1] + coefs[, 2] * qnorm(0.975)
+  ))
+  
+  res_df <- data.frame(
+    Term = rownames(results),
+    Metric = observed,
+    OR = as.numeric(results[, 1]),
+    LB = as.numeric(results[, 2]),
+    UB = as.numeric(results[, 3]),
+    stringsAsFactors = FALSE
+  )
+  res_df[-1, ]
+}
+
+for (tag in tags) {
+  tag_df <- data %>% filter(as.character(Tag) == tag)
+  if (length(unique(tag_df$Intervention_ID)) < 2) next
+  
+  tryCatch({
+    tag_model_acc        <- glm(Correct       ~ Intervention_ID, data = tag_df, family = binomial)
+    tag_model_acc_unsure <- glm(CorrectUnsure ~ Intervention_ID, data = tag_df, family = binomial)
+    tag_model_trust      <- glm(Trust         ~ Intervention_ID, data = tag_df, family = binomial)
+    tag_model_adherence  <- glm(Adherence     ~ Intervention_ID, data = tag_df, family = binomial)
+    tag_model_unsure     <- glm(Unsure        ~ Intervention_ID, data = tag_df, family = binomial)
+    
+    results_tag_acc        <- get_results_table_glm(summary(tag_model_acc),        "Correct",        "Intervention")
+    results_tag_acc_unsure <- get_results_table_glm(summary(tag_model_acc_unsure), "Correct+Unsure", "Intervention")
+    results_tag_trust      <- get_results_table_glm(summary(tag_model_trust),      "Trust",          "Intervention")
+    results_tag_adherence  <- get_results_table_glm(summary(tag_model_adherence),  "Adherence",      "Intervention")
+    results_tag_unsure     <- get_results_table_glm(summary(tag_model_unsure),     "Unsure",         "Intervention")
+    
+    results_combined <- rbind(results_tag_acc, results_tag_acc_unsure, results_tag_trust, results_tag_adherence, results_tag_unsure)
+    
+    if (!is.null(results_combined)) {
+      results_combined$Tag <- tag
+      all_tag_results[[tag]] <- results_combined
+    }
+  }, error = function(e) {
+    message(paste("Skipping tag:", tag, "- Error:", e$message))
+  })
+}
+
+if (length(all_tag_results) > 0) {
+  final_tag_results <- as.data.frame(do.call(rbind, all_tag_results))
+  
+  significant_results <- final_tag_results %>%
+    filter((LB > 1 | UB < 1)) %>%
+    filter(OR < 1e6 & OR > 1e-6) %>%
+    select(Tag, Metric, Term, OR, LB, UB) %>%
+    arrange(Tag, Metric)
+
+  print(as.data.frame(significant_results), row.names = FALSE)
+}
+
+## Result 11: Per-post Priming Group Effect
+correct_answers <- c(
+  "There is an RSV vaccine recommended for all babies whose mothers did not receive an RSV vaccine during pregnancy.",
+  "No, it is not safe",
+  "Increase the risk of developing breast cancer",
+  "6 Weeks", 
+  "Toddler formulas are not needed to meet nutritional needs of young children",
+  "Every five years",
+  "40",
+  "IUDs do not cause long term infertility",
+  "Only breastmilk",
+  "Anyone who's smoked at least 20 pack years of cigarettes and are between 50 - 80 years of age."
+)
+
+# Question mapping
+initial_fields <- c(
+  "rsv_inital", "cosleep_inital", "hrt_inital", "texas_inital", "formula_inital",
+  "papsmear_inital", "mammogram_inital", "IUD_inital", "breastfeed_inital", "lung_inital"
+)
+
+post_tags <- c(
+  "rsv", "cosleep", "hrt", "texas", "formula",
+  "papsmear", "mammogram", "IUD", "breastfeed", "lung"
+)
+correct_answers_named <- setNames(correct_answers, post_tags)
+
+initial_long_list <- list()
+
+for (i in 1:length(initial_fields)) {
+  init_field <- initial_fields[i]
+  post_tag <- post_tags[i]
+  correct_answer <- correct_answers_named[[post_tag]]
+  
+  if (init_field %in% names(initial)) {
+    
+    # Extract the initial response column
+    temp <- data.frame(
+      user_id = initial$user_id,
+      initial_response = initial[[init_field]],
+      Tag = post_tag,
+      stringsAsFactors = FALSE
+    )
+    
+    # Score the response
+    temp <- temp %>%
+  mutate(
+    Unsure_Initial = as.integer(is.na(initial_response) | 
+                                initial_response == "" | 
+                                initial_response == "Unsure"),
+    
+    Correct_Initial = as.integer(
+      !Unsure_Initial & 
+      trimws(initial_response) == trimws(correct_answer)
+    )
+  ) %>%
+  select(user_id, Tag, Correct_Initial, Unsure_Initial)
+    
+    initial_long_list[[i]] <- temp
+  }
+}
+
+initial_long <- bind_rows(initial_long_list)
+
+post_data <- data %>%
+  filter(Intervention_ID == "Priming") %>%
+  filter(Tag %in% post_tags) %>%
+  dplyr::rename(user_id = Participant_ID) %>%
+  dplyr::rename(Correct_Post = Correct, Unsure_Post = Unsure)
+
+change_data <- initial_long %>%
+  inner_join(post_data, by = c("user_id", "Tag")) %>%
+  mutate(
+    # Calculate changes
+    Accuracy_Change = Correct_Post - Correct_Initial,
+    Unsure_Change = Unsure_Post - Unsure_Initial,
+    
+    # Binary outcomes
+    Improved = as.integer(Accuracy_Change > 0),
+    Worsened = as.integer(Accuracy_Change < 0),
+    Became_More_Certain = as.integer(Unsure_Change < 0),
+    
+    # Convert to factors for modeling
+    user_id = as.factor(user_id),
+    Tag = as.factor(Tag),
+    Familiarity = as.factor(Familiarity),
+    Child = as.factor(Child),
+    BreastCancer = as.factor(BreastCancer),
+    Misinfo = as.factor(Misinfo)
+  )
+
+  get_or_table <- function(model) {
+  coef_summary <- summary(model)$coefficients
+  or_table <- data.frame(
+    Variable = rownames(coef_summary),
+    Estimate = coef_summary[, "Estimate"],
+    SE = coef_summary[, "Std. Error"],
+    OR = exp(coef_summary[, "Estimate"]),
+    LB_95 = exp(coef_summary[, "Estimate"] - 1.96 * coef_summary[, "Std. Error"]),
+    UB_95 = exp(coef_summary[, "Estimate"] + 1.96 * coef_summary[, "Std. Error"]),
+    Z = coef_summary[, "z value"],
+    P = coef_summary[, "Pr(>|z|)"],
+    Sig = ifelse(coef_summary[, "Pr(>|z|)"] < 0.001, "***",
+           ifelse(coef_summary[, "Pr(>|z|)"] < 0.01, "**",
+           ifelse(coef_summary[, "Pr(>|z|)"] < 0.05, "*",
+           ifelse(coef_summary[, "Pr(>|z|)"] < 0.1, ".", ""))))
+  )
+  rownames(or_table) <- NULL
+  return(or_table)
+}
+
+cat("Total observations:", nrow(change_data), "\n")
+cat("Number of participants:", length(unique(change_data$user_id)), "\n")
+cat("Number of questions:", length(unique(change_data$Tag)), "\n\n")
+
+cat("Unsure Rates:\n")
+cat("  Initial unsure:", sprintf("%.1f%%", mean(change_data$Unsure_Initial)*100), "\n")
+cat("  Post unsure:", sprintf("%.1f%%", mean(change_data$Unsure_Post)*100), "\n")
+
+
+question_summary <- change_data %>%
+  dplyr::group_by(Tag) %>%
+  dplyr::summarise(
+    
+    Initial_Acc = sprintf("%.1f%%", mean(Correct_Initial, na.rm = TRUE) * 100),
+    Post_Acc = sprintf("%.1f%%", mean(Correct_Post, na.rm = TRUE) * 100),
+    
+    .groups = "drop"
+  )
+print(question_summary)
